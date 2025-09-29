@@ -80,18 +80,107 @@ class _TodayScreenState extends State<TodayScreen> {
               itemCount: todays.length,
               itemBuilder: (BuildContext context, int index) {
                 final Task task = todays[index];
-                return TaskCard(
-                  task: task,
-                  onToggleComplete: () async {
-                    await _storage.updateTask(
-                      task.copyWith(isCompleted: !task.isCompleted),
+                return Dismissible(
+                  key: ValueKey<String>(task.id),
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  direction: DismissDirection.endToStart,
+                  confirmDismiss: (DismissDirection d) async {
+                    final bool? confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (BuildContext ctx) => AlertDialog(
+                        title: const Text('Delete task?'),
+                        content: const Text('This action cannot be undone.'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
                     );
-                    await _load();
+                    return confirm == true;
                   },
-                  onDelete: () async {
+                  onDismissed: (_) async {
                     await _storage.deleteTask(task.id);
                     await _load();
                   },
+                  child: TaskCard(
+                    task: task,
+                    onToggleComplete: () async {
+                      await _storage.updateTask(
+                        task.copyWith(isCompleted: !task.isCompleted),
+                      );
+                      await _load();
+                    },
+                    onDelete: () async {
+                      final bool? confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (BuildContext ctx) => AlertDialog(
+                          title: const Text('Delete task?'),
+                          content: const Text('This action cannot be undone.'),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.of(ctx).pop(true),
+                              child: const Text('Delete'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await _storage.deleteTask(task.id);
+                        await _load();
+                      }
+                    },
+                    onEdit: () async {
+                      await showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (BuildContext ctx) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+                            ),
+                            child: TaskForm(
+                              initialTitle: task.title,
+                              initialDescription: task.description,
+                              initialDueDate: task.dueDate,
+                              initialReminderTime: task.reminderTime,
+                              submitLabel: 'Update Task',
+                              onSubmit:
+                                  ({
+                                    required String title,
+                                    String? description,
+                                    required DateTime dueDate,
+                                    TimeOfDay? reminderTime,
+                                  }) async {
+                                    final Task updated = task.copyWith(
+                                      title: title,
+                                      description: description,
+                                      dueDate: dueDate,
+                                      reminderTime: reminderTime,
+                                    );
+                                    await _storage.updateTask(updated);
+                                    await _load();
+                                  },
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 );
               },
             ),

@@ -6,12 +6,14 @@ class TaskCard extends StatelessWidget {
   final Task task;
   final VoidCallback? onToggleComplete;
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
 
   const TaskCard({
     super.key,
     required this.task,
     this.onToggleComplete,
     this.onDelete,
+    this.onEdit,
   });
 
   @override
@@ -28,6 +30,7 @@ class TaskCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
+            IconButton(icon: const Icon(Icons.edit), onPressed: onEdit),
             IconButton(
               icon: Icon(
                 task.isCompleted

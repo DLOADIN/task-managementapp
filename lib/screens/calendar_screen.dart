@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../widgets/task_form.dart';
 import '../models/task.dart';
 import '../services/storage_service.dart';
 
@@ -171,6 +171,88 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       return ListTile(
                         title: Text(t.title),
                         subtitle: Text(t.description ?? ''),
+                        trailing: Wrap(
+                          spacing: 8,
+                          children: <Widget>[
+                            IconButton(
+                              tooltip: 'Edit',
+                              icon: const Icon(Icons.edit),
+                              onPressed: () async {
+                                await showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (BuildContext ctx) {
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom: MediaQuery.of(
+                                          ctx,
+                                        ).viewInsets.bottom,
+                                      ),
+                                      child: TaskForm(
+                                        initialTitle: t.title,
+                                        initialDescription: t.description,
+                                        initialDueDate: t.dueDate,
+                                        initialReminderTime: t.reminderTime,
+                                        submitLabel: 'Update Task',
+                                        onSubmit:
+                                            ({
+                                              required String title,
+                                              String? description,
+                                              required DateTime dueDate,
+                                              TimeOfDay? reminderTime,
+                                            }) async {
+                                              final Task updated = t.copyWith(
+                                                title: title,
+                                                description: description,
+                                                dueDate: dueDate,
+                                                reminderTime: reminderTime,
+                                              );
+                                              await _storage.updateTask(
+                                                updated,
+                                              );
+                                              await _load();
+                                            },
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                            IconButton(
+                              tooltip: 'Delete',
+                              icon: const Icon(Icons.delete),
+                              onPressed: () async {
+                                final bool? confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (BuildContext ctx) {
+                                    return AlertDialog(
+                                      title: const Text('Delete task?'),
+                                      content: const Text(
+                                        'This action cannot be undone.',
+                                      ),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(ctx).pop(false),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () =>
+                                              Navigator.of(ctx).pop(true),
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                                if (confirm == true) {
+                                  await _storage.deleteTask(t.id);
+                                  await _load();
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),

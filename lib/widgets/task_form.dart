@@ -9,7 +9,21 @@ class TaskForm extends StatefulWidget {
   })
   onSubmit;
 
-  const TaskForm({super.key, required this.onSubmit});
+  final String? initialTitle;
+  final String? initialDescription;
+  final DateTime? initialDueDate;
+  final TimeOfDay? initialReminderTime;
+  final String submitLabel;
+
+  const TaskForm({
+    super.key,
+    required this.onSubmit,
+    this.initialTitle,
+    this.initialDescription,
+    this.initialDueDate,
+    this.initialReminderTime,
+    this.submitLabel = 'Save Task',
+  });
 
   @override
   State<TaskForm> createState() => _TaskFormState();
@@ -21,6 +35,15 @@ class _TaskFormState extends State<TaskForm> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _dueDate;
   TimeOfDay? _reminderTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController.text = widget.initialTitle ?? '';
+    _descriptionController.text = widget.initialDescription ?? '';
+    _dueDate = widget.initialDueDate;
+    _reminderTime = widget.initialReminderTime;
+  }
 
   @override
   void dispose() {
@@ -122,7 +145,7 @@ class _TaskFormState extends State<TaskForm> {
                 ],
               ),
               const SizedBox(height: 16),
-              FilledButton(onPressed: _submit, child: const Text('Save Task')),
+              FilledButton(onPressed: _submit, child: Text(widget.submitLabel)),
             ],
           ),
         ),
