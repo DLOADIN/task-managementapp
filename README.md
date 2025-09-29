@@ -110,5 +110,3 @@ The generated APK will be under `build/app/outputs/flutter-apk/`.
 - Stale state: Try `flutter clean && flutter pub get`
 
 ---
-
-This README summarizes the implemented Study Planner features, how to run the app on common platforms, and outlines next steps to evolve it further.
